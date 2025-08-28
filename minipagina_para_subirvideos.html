@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Subir Video</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f30817;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+    }
+    .video-section {
+      margin-top: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 315px;
+      border: none;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Subir Nuevo Video</h2>
+    <p>Pega aquí la URL de tu video de YouTube o archivo:</p>
+    <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=XXXX">
+    <button onclick="subirVideo()">Subir Video</button>
+
+    <div class="video-section" id="ContenidoReciente">
+      <h3>📺 CONTENIDO RECIENTE</h3>
+    </div>
+  </div>
+
+  <script>
+    // --- Función para obtener embed de YouTube ---
+    function getYouTubeEmbed(url) {
+      let videoId = "";
+      const match = url.match(/(?:youtube\.com\/.*v=|youtu\.be\/)([^&]+)/);
+      if (match && match[1]) {
+        videoId = match[1];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      return url; // si no es youtube, se usa tal cual (ej: mp4)
+    }
+
+    // --- Subir video ---
+    function subirVideo() {
+      const url = document.getElementById("videoUrl").value.trim();
+      if (!url) {
+        alert("Por favor ingresa una URL de video.");
+        return;
+      }
+
+      const embedUrl = getYouTubeEmbed(url);
+
+      // Guardar en localStorage
+      let videos = JSON.parse(localStorage.getItem("videos")) || [];
+      videos.unshift(embedUrl); // lo nuevo al inicio
+      localStorage.setItem("videos", JSON.stringify(videos));
+
+      // Mostrar en la página
+      mostrarVideos();
+
+      // Notificación
+      enviarNotificacion("Se ha subido un nuevo video a la página 🎥");
+
+      // Limpiar input
+      document.getElementById("videoUrl").value = "";
+    }
+
+    // --- Mostrar todos los videos guardados ---
+    function mostrarVideos() {
+      const contenedor = document.getElementById("videosRecientes");
+      contenedor.innerHTML = "<h3>📺 Videos Recientes</h3>";
+
+      const videos = JSON.parse(localStorage.getItem("videos")) || [];
+      videos.forEach(url => {
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        contenedor.appendChild(iframe);
+      });
+    }
+
+    // --- Notificaciones ---
+    function enviarNotificacion(mensaje) {
+      if (Notification.permission === "granted") {
+        new Notification("Nueva Noticia 🚀", { body: mensaje });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            new Notification("Nueva Noticia 🚀", { body: mensaje });
+          }
+        });
+      }
+    }
+
+    // --- Mostrar los videos al cargar la página ---
+    window.onload = mostrarVideos;
+  </script>
+</body>
+</html>
